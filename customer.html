@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StampWay — My Stamps</title>
+<style>
+  :root{
+    --ink:#1a1d29;
+    --paper:#faf7f2;
+    --clay:#c65d3b;
+    --clay-dark:#a84a2c;
+    --line:#e4ddd1;
+    --muted:#7a7468;
+    --stamp:#2f5d4f;
+    --stamp-dark:#1f4237;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:20px 16px 60px;}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .stampmark{
+    width:36px;height:36px;border-radius:50%;
+    border:2.5px dashed var(--stamp);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--stamp);font-weight:800;font-size:12px;
+    transform:rotate(-8deg);flex-shrink:0;
+  }
+  h1{font-size:20px;margin:0;}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 20px;}
+
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:20px;margin-bottom:16px;
+  }
+  .store-name{font-size:18px;font-weight:800;margin:0 0 4px;}
+  .store-cat{font-size:12px;color:var(--clay);font-weight:600;margin-bottom:14px;}
+  
+  .stamp-visual{text-align:center;margin:20px 0;}
+  .stamp-circle{
+    width:140px;height:140px;border-radius:50%;
+    border:3px solid var(--stamp);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    margin:0 auto;
+  }
+  .stamp-count{font-size:32px;font-weight:900;color:var(--stamp);}
+  .stamp-total{font-size:14px;color:var(--muted);margin-top:2px;}
+  
+  .progress-bar{
+    width:100%;height:8px;background:var(--line);border-radius:10px;
+    margin:16px 0;overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;background:var(--stamp);border-radius:10px;
+  }
+  
+  .reward-box{
+    background:#fff8f0;border:2px solid var(--clay);border-radius:10px;
+    padding:14px;margin:14px 0;
+  }
+  .reward-box .title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;}
+  .reward-box .desc{font-size:15px;font-weight:800;color:var(--clay);margin-top:6px;}
+  .reward-box .validity{font-size:12px;color:var(--muted);margin-top:8px;}
+  
+  .row{display:flex;justify-content:space-between;font-size:13px;padding:6px 0;}
+  .row .label{color:var(--muted);}
+  .row .value{font-weight:600;}
+  
+  .ready{background:#e8f2ec !important;border-color:var(--stamp) !important;}
+  .ready .desc{color:var(--stamp);}
+  
+  .history{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:16px;margin-top:16px;
+  }
+  .history-title{font-size:12px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;}
+  .store-item{
+    padding:8px 0;border-bottom:1px solid var(--line);font-size:13px;
+  }
+  .store-item:last-child{border-bottom:none;}
+  .store-item .name{font-weight:600;}
+  .store-item .date{color:var(--muted);font-size:12px;}
+
+  .empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14px;line-height:1.6;}
+  .foot{text-align:center;color:var(--muted);font-size:12px;margin-top:20px;line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="stampmark">SW</div>
+    <h1>StampWay</h1>
+  </div>
+  <p class="sub">Your stamp collection and rewards</p>
+
+  <div id="list"></div>
+  <div id="history" class="history" style="display:none;">
+    <div class="history-title">Stores You've Visited</div>
+    <div id="historyList"></div>
+  </div>
+
+  <p class="foot">Collect stamps from any store. When you reach the required stamps, your reward is ready to claim!</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyCIoNB3MEfz_wdazFvnx1LaDICbeto05Sk",
+    authDomain: "stampway-c32c0.firebaseapp.com",
+    projectId: "stampway-c32c0",
+    storageBucket: "stampway-c32c0.firebasestorage.app",
+    messagingSenderId: "999186622571",
+    appId: "1:999186622571:web:9d4c57287f7196ca20a92e",
+    measurementId: "G-2P0R6QZ6T9"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.firestore();
+
+  // Get businessId from URL parameter
+  var urlParams = new URLSearchParams(window.location.search);
+  var businessId = urlParams.get('storeId') || urlParams.get('store');
+  var customerPhone = urlParams.get('customer') || urlParams.get('phone') || localStorage.getItem('customerPhone');
+
+  if (!businessId) {
+    document.body.innerHTML = '<div class="empty" style="padding:60px 20px;"><p>No store specified. Scan a valid QR code.</p></div>';
+  } else if (!customerPhone) {
+    var phone = prompt("Enter your 10-digit phone number:");
+    if (!phone || phone.length !== 10 || isNaN(phone)) {
+      document.body.innerHTML = '<div class="empty" style="padding:60px 20px;"><p>Invalid phone number.</p></div>';
+    } else {
+      localStorage.setItem('customerPhone', phone);
+      loadStoreData(businessId, phone);
+    }
+  } else {
+    loadStoreData(businessId, customerPhone);
+  }
+
+  function loadStoreData(storeId, phone) {
+    // Load current store
+    db.collection('businesses').doc(storeId).get().then(function(doc) {
+      if (!doc.exists) {
+        document.getElementById('list').innerHTML = '<p class="empty">Store not found.</p>';
+        return;
+      }
+
+      var storeData = doc.data();
+      var stampDocId = phone + '_' + storeId;
+
+      // Watch for stamps
+      db.collection('customerStamps').doc(stampDocId).onSnapshot(function(stampDoc) {
+        var stamps = 0;
+        var lastStamp = null;
+        if (stampDoc.exists) {
+          stamps = stampDoc.data().currentStamps || 0;
+          lastStamp = stampDoc.data().lastStampAt;
+        }
+
+        var required = storeData.stampsRequired || 10;
+        var pct = Math.min((stamps / required) * 100, 100);
+        var isReady = stamps >= required;
+
+        var html = '<div class="card ' + (isReady ? 'ready' : '') + '">' +
+          '<p class="store-name">' + escapeHtml(storeData.name) + '</p>' +
+          '<p class="store-cat">' + escapeHtml(storeData.category) + '</p>' +
+          '<div class="stamp-visual">' +
+            '<div class="stamp-circle">' +
+              '<div class="stamp-count">' + stamps + '</div>' +
+              '<div class="stamp-total">/' + required + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div class="progress-bar"><div class="progress-fill" style="width:' + pct + '%"></div></div>';
+
+        if (isReady) {
+          html += '<div class="reward-box ready">' +
+            '<p class="title">🎉 Reward Ready!</p>' +
+            '<p class="desc">' + escapeHtml(storeData.rewardDescription || 'Your reward') + '</p>' +
+            '<p class="validity">Valid until you claim it at the store</p>' +
+          '</div>';
+        } else {
+          var remaining = required - stamps;
+          html += '<div class="reward-box">' +
+            '<p class="title">Next Reward</p>' +
+            '<p class="desc">' + escapeHtml(storeData.rewardDescription || 'Reward') + '</p>' +
+            '<p class="validity">Need ' + remaining + ' more stamp' + (remaining > 1 ? 's' : '') + '</p>' +
+          '</div>';
+        }
+
+        html += '<div class="row"><div class="label">Store Location</div><div class="value">' + escapeHtml(storeData.address || '-') + '</div></div>' +
+          '<div class="row"><div class="label">Store Phone</div><div class="value">' + escapeHtml(storeData.phone || '-') + '</div></div>';
+
+        if (lastStamp) {
+          var date = new Date(lastStamp.toDate());
+          html += '<div class="row"><div class="label">Last Stamp</div><div class="value">' + formatDate(date) + '</div></div>';
+        }
+
+        html += '</div>';
+        document.getElementById('list').innerHTML = html;
+      });
+
+      // Load history of visited stores
+      db.collection('customerStamps').where('customerPhone', '==', phone).get().then(function(snapshot) {
+        var stores = [];
+        snapshot.forEach(function(doc) {
+          var data = doc.data();
+          stores.push({
+            businessId: data.businessId,
+            stamps: data.currentStamps,
+            lastVisit: data.lastStampAt
+          });
+        });
+
+        if (stores.length > 1) {
+          var historyHtml = '';
+          stores.forEach(function(s) {
+            if (s.businessId !== storeId) {
+              db.collection('businesses').doc(s.businessId).get().then(function(storeDoc) {
+                if (storeDoc.exists) {
+                  var sData = storeDoc.data();
+                  historyHtml += '<div class="store-item">' +
+                    '<div class="name">' + escapeHtml(sData.name) + '</div>' +
+                    '<div class="date">' + (s.stamps || 0) + ' stamps • ' + formatDate(s.lastVisit.toDate()) + '</div>' +
+                  '</div>';
+                  document.getElementById('historyList').innerHTML = historyHtml;
+                }
+              });
+            }
+          });
+          document.getElementById('history').style.display = 'block';
+        }
+      });
+    });
+  }
+
+  function formatDate(date) {
+    var today = new Date();
+    var yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === today.toDateString()) return 'Today';
+    if (date.toDateString() === yesterday.toDateString()) return 'Yesterday';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str || '';
+    return div.innerHTML;
+  }
+</script>
+</body>
+</html>

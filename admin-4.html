@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StampWay — Admin Panel</title>
+<style>
+  :root{
+    --ink:#1a1d29;
+    --paper:#faf7f2;
+    --clay:#c65d3b;
+    --clay-dark:#a84a2c;
+    --line:#e4ddd1;
+    --muted:#7a7468;
+    --stamp:#2f5d4f;
+    --stamp-dark:#1f4237;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:24px 16px 60px;}
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .stampmark{
+    width:36px;height:36px;border-radius:50%;
+    border:2.5px dashed var(--stamp);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--stamp);font-weight:800;font-size:12px;
+    transform:rotate(-8deg);flex-shrink:0;
+  }
+  h1{font-size:20px;margin:0;}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 20px;}
+
+  /* Login screen */
+  #loginBox{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:24px 18px;margin-top:40px;text-align:center;
+  }
+  #loginBox input{
+    width:100%;padding:13px;font-size:16px;margin:16px 0;
+    border:1.5px solid var(--line);border-radius:9px;text-align:center;
+    letter-spacing:2px;
+  }
+  #loginBox button{
+    width:100%;padding:13px;background:var(--stamp);color:#fff;
+    border:none;border-radius:9px;font-size:15px;font-weight:700;
+  }
+  #loginErr{color:var(--clay-dark);font-size:13px;margin-top:10px;display:none;}
+
+  /* Tabs */
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab{
+    flex:1;text-align:center;padding:10px 6px;border-radius:9px;
+    background:#fff;border:1.5px solid var(--line);
+    font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;
+  }
+  .tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:16px;margin-bottom:12px;
+  }
+  .card .name{font-size:16px;font-weight:800;margin:0 0 2px;}
+  .card .cat{font-size:12.5px;color:var(--clay);font-weight:600;margin-bottom:10px;}
+  .row{display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0;border-bottom:1px dashed var(--line);}
+  .row:last-of-type{border-bottom:none;}
+  .row span:first-child{color:var(--muted);}
+  .row span:last-child{font-weight:600;text-align:right;}
+  .badge{
+    display:inline-block;font-size:11px;font-weight:700;
+    padding:3px 9px;border-radius:20px;margin-bottom:10px;
+  }
+  .badge.pending{background:#fff3cd;color:#8a6d1a;}
+  .badge.active{background:#e8f2ec;color:var(--stamp);}
+  .badge.rejected{background:#fbe9e5;color:var(--clay-dark);}
+  .actions{display:flex;gap:8px;margin-top:12px;}
+  .actions button{
+    flex:1;padding:11px;border:none;border-radius:8px;
+    font-size:14px;font-weight:700;
+  }
+  .approve{background:var(--stamp);color:#fff;}
+  .reject{background:#fff;color:var(--clay-dark);border:1.5px solid var(--clay-dark) !important;}
+  .deactivate{background:#fff;color:var(--muted);border:1.5px solid var(--line) !important;}
+  .empty{text-align:center;color:var(--muted);font-size:14px;padding:40px 0;}
+  #topStatus{font-size:12px;color:var(--muted);text-align:center;margin-bottom:16px;font-family:monospace;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="stampmark">SW</div>
+    <h1>StampWay — Admin</h1>
+  </div>
+  <p class="sub">Review and approve store registrations</p>
+
+  <div id="loginBox">
+    <p style="margin:0;color:var(--muted);font-size:14px;">Enter your admin password to access the panel</p>
+    <input type="password" id="pwInput" placeholder="••••••">
+    <button onclick="tryLogin()">Login</button>
+    <p id="loginErr">Incorrect password. Please try again.</p>
+  </div>
+
+  <div id="panel" style="display:none;">
+    <div id="topStatus">Loading...</div>
+    <div class="tabs">
+      <div class="tab active" data-tab="pending" onclick="switchTab('pending')">Pending</div>
+      <div class="tab" data-tab="active" onclick="switchTab('active')">Active</div>
+      <div class="tab" data-tab="rejected" onclick="switchTab('rejected')">Rejected</div>
+    </div>
+    <div id="list"></div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyCIoNB3MEfz_wdazFvnx1LaDICbeto05Sk",
+    authDomain: "stampway-c32c0.firebaseapp.com",
+    projectId: "stampway-c32c0",
+    storageBucket: "stampway-c32c0.firebasestorage.app",
+    messagingSenderId: "999186622571",
+    appId: "1:999186622571:web:9d4c57287f7196ca20a92e",
+    measurementId: "G-2P0R6QZ6T9"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.firestore();
+
+  // Simple boss password — badal lena isko apni marzi se
+  var BOSS_PASSWORD = "stampgo123";
+  var currentTab = "pending";
+  var allDocs = [];
+
+  function tryLogin() {
+    var val = document.getElementById('pwInput').value;
+    if (val === BOSS_PASSWORD) {
+      document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('panel').style.display = 'block';
+      loadData();
+    } else {
+      document.getElementById('loginErr').style.display = 'block';
+    }
+  }
+
+  document.getElementById('pwInput').addEventListener('keyup', function(e){
+    if (e.key === 'Enter') tryLogin();
+  });
+
+  function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(function(t){
+      t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    render();
+  }
+
+  function loadData() {
+    db.collection('businesses').orderBy('createdAt', 'desc')
+      .onSnapshot(function(snapshot) {
+        allDocs = [];
+        snapshot.forEach(function(doc) {
+          allDocs.push({ id: doc.id, data: doc.data() });
+        });
+        document.getElementById('topStatus').textContent = 'Total stores: ' + allDocs.length;
+        render();
+      }, function(err) {
+        document.getElementById('topStatus').textContent = 'Error: ' + err.message;
+      });
+  }
+
+  function render() {
+    var list = document.getElementById('list');
+    var filtered = allDocs.filter(function(item) {
+      var s = item.data.status || 'pending';
+      if (currentTab === 'pending') return s === 'pending';
+      if (currentTab === 'active') return s === 'approved';
+      if (currentTab === 'rejected') return s === 'rejected';
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      list.innerHTML = '<p class="empty">No stores in this category</p>';
+      return;
+    }
+
+    list.innerHTML = filtered.map(function(item) {
+      var d = item.data;
+      var badgeClass = d.status === 'approved' ? 'active' : (d.status === 'rejected' ? 'rejected' : 'pending');
+      var badgeText = d.status === 'approved' ? 'ACTIVE' : (d.status === 'rejected' ? 'REJECTED' : 'PENDING');
+
+      var actionsHtml = '';
+      if (d.status === 'pending' || !d.status) {
+        actionsHtml =
+          '<div class="actions">' +
+            '<button class="approve" onclick="approveStore(\'' + item.id + '\')">✓ Approve (Payment Received)</button>' +
+            '<button class="reject" onclick="rejectStore(\'' + item.id + '\')">✕ Reject</button>' +
+          '</div>';
+      } else if (d.status === 'approved') {
+        actionsHtml =
+          '<div class="actions">' +
+            '<button class="deactivate" onclick="deactivateStore(\'' + item.id + '\')">Deactivate</button>' +
+          '</div>';
+      } else if (d.status === 'rejected') {
+        actionsHtml =
+          '<div class="actions">' +
+            '<button class="approve" onclick="approveStore(\'' + item.id + '\')">✓ Approve Now</button>' +
+          '</div>';
+      }
+
+      return (
+        '<div class="card">' +
+          '<span class="badge ' + badgeClass + '">' + badgeText + '</span>' +
+          '<p class="name">' + escapeHtml(d.name || 'Naam nahi') + '</p>' +
+          '<p class="cat">' + escapeHtml(d.category || '') + '</p>' +
+          '<div class="row"><span>Location</span><span>' + escapeHtml(d.address || '-') + '</span></div>' +
+          '<div class="row"><span>Store phone</span><span>' + escapeHtml(d.phone || '-') + '</span></div>' +
+          '<div class="row"><span>Owner</span><span>' + escapeHtml(d.ownerName || '-') + '</span></div>' +
+          '<div class="row"><span>Owner phone</span><span>' + escapeHtml(d.ownerPhone || '-') + '</span></div>' +
+          '<div class="row"><span>Staff count</span><span>' + (d.staffCount || '-') + '</span></div>' +
+          '<div class="row"><span>Staff phone</span><span>' + escapeHtml(d.staffPhone || '-') + '</span></div>' +
+          '<div class="row"><span>Stamps required</span><span>' + (d.stampsRequired || '-') + '</span></div>' +
+          '<div class="row"><span>Reward</span><span>' + escapeHtml(d.rewardDescription || '-') + '</span></div>' +
+          actionsHtml +
+        '</div>'
+      );
+    }).join('');
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function approveStore(id) {
+    if (!confirm('Confirm: Have you received payment from this store?')) return;
+    db.collection('businesses').doc(id).update({
+      status: 'approved',
+      isActive: true,
+      approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  function rejectStore(id) {
+    if (!confirm('Are you sure you want to reject this store?')) return;
+    db.collection('businesses').doc(id).update({
+      status: 'rejected',
+      isActive: false
+    });
+  }
+
+  function deactivateStore(id) {
+    if (!confirm('Deactivate this store? (subscription expired or payment not received)')) return;
+    db.collection('businesses').doc(id).update({
+      status: 'rejected',
+      isActive: false
+    });
+  }
+</script>
+</body>
+</html>
