@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StampWay — Owner Dashboard</title>
+<style>
+  :root{
+    --ink:#1a1d29;
+    --paper:#faf7f2;
+    --clay:#c65d3b;
+    --clay-dark:#a84a2c;
+    --line:#e4ddd1;
+    --muted:#7a7468;
+    --stamp:#2f5d4f;
+    --stamp-dark:#1f4237;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:20px 16px 60px;}
+  
+  /* LOGIN SCREEN */
+  #loginBox{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:24px 18px;margin-top:40px;text-align:center;
+  }
+  .brand{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
+  .stampmark{
+    width:36px;height:36px;border-radius:50%;
+    border:2.5px dashed var(--stamp);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--stamp);font-weight:800;font-size:12px;
+    transform:rotate(-8deg);flex-shrink:0;
+  }
+  h1{font-size:20px;margin:0;}
+  .sub{color:var(--muted);font-size:13px;margin:4px 0 20px;}
+  
+  #loginBox input{
+    width:100%;padding:13px;font-size:16px;margin:16px 0;
+    border:1.5px solid var(--line);border-radius:9px;text-align:center;
+    letter-spacing:2px;
+  }
+  #loginBox button{
+    width:100%;padding:13px;background:var(--stamp);color:#fff;
+    border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;
+  }
+  #loginErr{color:var(--clay-dark);font-size:13px;margin-top:10px;display:none;}
+
+  /* DASHBOARD */
+  #dashboard{display:none;}
+  
+  .header{
+    background:#fff;border-bottom:1px solid var(--line);
+    padding:16px;display:flex;justify-content:space-between;align-items:center;
+  }
+  .header h2{margin:0;font-size:16px;}
+  .logout-btn{
+    background:var(--clay);color:#fff;border:none;border-radius:6px;
+    padding:8px 14px;font-size:12px;cursor:pointer;
+  }
+
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:14px;
+    padding:18px;margin-bottom:14px;
+  }
+  
+  .store-info{
+    text-align:center;margin-bottom:16px;
+  }
+  .store-name{font-size:20px;font-weight:800;margin:0;}
+  .store-cat{font-size:13px;color:var(--clay);margin:4px 0 0;}
+
+  .qr-section{text-align:center;margin:18px 0;}
+  .qr-box{
+    background:var(--paper);border:2px dashed var(--stamp);
+    border-radius:10px;padding:16px;margin:12px 0;
+    min-height:200px;display:flex;align-items:center;justify-content:center;
+  }
+  #qrCode{max-width:180px;}
+  .qr-btn{
+    background:var(--stamp);color:#fff;border:none;border-radius:9px;
+    padding:12px 20px;font-size:14px;font-weight:700;cursor:pointer;
+    margin:8px 4px;
+  }
+  .qr-btn.secondary{
+    background:#fff;color:var(--stamp);border:2px solid var(--stamp);
+  }
+
+  .tabs{display:flex;gap:8px;margin-bottom:16px;}
+  .tab{
+    flex:1;text-align:center;padding:10px;border-radius:8px;
+    background:#fff;border:1.5px solid var(--line);
+    font-size:13px;font-weight:700;color:var(--muted);cursor:pointer;
+  }
+  .tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+
+  .stat-row{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:12px 0;border-bottom:1px solid var(--line);
+  }
+  .stat-row:last-child{border-bottom:none;}
+  .stat-label{color:var(--muted);font-size:13px;}
+  .stat-value{font-size:16px;font-weight:800;color:var(--stamp);}
+
+  .profile-field{
+    margin:14px 0;
+  }
+  .profile-field label{
+    display:block;font-size:12px;font-weight:700;color:var(--muted);
+    text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px;
+  }
+  .profile-field input{
+    width:100%;padding:11px;font-size:14px;
+    border:1.5px solid var(--line);border-radius:8px;
+    font-family:inherit;
+  }
+  .profile-field input:focus{outline:none;border-color:var(--clay);}
+
+  .save-btn{
+    width:100%;padding:12px;background:var(--clay);color:#fff;
+    border:none;border-radius:9px;font-size:14px;font-weight:700;
+    cursor:pointer;margin-top:14px;
+  }
+
+  .status{
+    margin-top:12px;padding:12px;border-radius:9px;font-size:13px;
+    text-align:center;display:none;
+  }
+  .success{background:#e8f2ec;color:var(--stamp);display:block !important;}
+  .error{background:#fbe9e5;color:var(--clay-dark);display:block !important;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- LOGIN SCREEN -->
+  <div id="loginBox">
+    <div class="brand">
+      <div class="stampmark">SW</div>
+      <h1>StampWay</h1>
+    </div>
+    <p class="sub">Owner Dashboard</p>
+    
+    <!-- PHONE ENTRY SCREEN -->
+    <div id="phoneScreen">
+      <p style="margin:20px 0;color:var(--muted);font-size:14px;">Enter your registered phone number</p>
+      <input type="tel" id="phoneInput" placeholder="10 digit number" pattern="[0-9]{10}" maxlength="10">
+      <button onclick="sendOTP()" id="sendOtpBtn">Send OTP</button>
+      <p id="phoneErr" style="color:var(--clay-dark);font-size:13px;margin-top:10px;display:none;"></p>
+    </div>
+
+    <!-- PASSWORD VERIFICATION SCREEN -->
+    <div id="passwordScreen" style="display:none;">
+      <p style="margin:20px 0;color:var(--muted);font-size:14px;">Enter your password to access dashboard</p>
+      <input type="password" id="passwordInput" placeholder="Enter password" style="text-align:left;">
+      <button onclick="verifyPassword()" id="verifyPasswordBtn">Verify Password</button>
+      <p id="passwordErr" style="color:var(--clay-dark);font-size:13px;margin-top:10px;display:none;"></p>
+    </div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="dashboard">
+    <div class="header">
+      <h2>Dashboard</h2>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <!-- Store Info Card -->
+    <div class="card">
+      <div class="store-info">
+        <p class="store-name" id="storeName">Store Name</p>
+        <p class="store-cat" id="storeCategory">Category</p>
+      </div>
+    </div>
+
+    <!-- QR Code Card -->
+    <div class="card">
+      <h3 style="margin:0 0 12px;font-size:14px;font-weight:700;">Store QR Code</h3>
+      <div class="qr-section">
+        <div class="qr-box" id="qrContainer">
+          <div id="qrCode"></div>
+        </div>
+        <button class="qr-btn" onclick="generateQR()">Generate QR</button>
+        <button class="qr-btn secondary" onclick="downloadQR()">Download QR</button>
+      </div>
+      <div id="qrStatus" class="status"></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" onclick="switchTab('stats')">Today's Stats</div>
+      <div class="tab" onclick="switchTab('profile')">Edit Profile</div>
+    </div>
+
+    <!-- STATS TAB -->
+    <div id="statsTab">
+      <div class="card">
+        <h3 style="margin:0 0 12px;font-size:14px;font-weight:700;">Today's Performance</h3>
+        <div class="stat-row">
+          <span class="stat-label">Stamps Given</span>
+          <span class="stat-value" id="stampsToday">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Customers Today</span>
+          <span class="stat-value" id="customersToday">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Rewards Redeemed</span>
+          <span class="stat-value" id="rewardsToday">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Opening Time</span>
+          <span class="stat-value">9:00 AM</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin:0 0 12px;font-size:14px;font-weight:700;">This Month</h3>
+        <div class="stat-row">
+          <span class="stat-label">Total Stamps</span>
+          <span class="stat-value" id="stampsMonth">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Total Customers</span>
+          <span class="stat-value" id="customersMonth">0</span>
+        </div>
+        <div class="stat-row">
+          <span class="stat-label">Active Rewards</span>
+          <span class="stat-value" id="activeRewards">0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROFILE TAB -->
+    <div id="profileTab" style="display:none;">
+      <div class="card">
+        <h3 style="margin:0 0 16px;font-size:14px;font-weight:700;">Store Details</h3>
+        
+        <div class="profile-field">
+          <label>Store Name</label>
+          <input type="text" id="editStoreName" placeholder="Your store name">
+        </div>
+
+        <div class="profile-field">
+          <label>Location</label>
+          <input type="text" id="editLocation" placeholder="Area, City">
+        </div>
+
+        <div class="profile-field">
+          <label>Instagram Handle</label>
+          <input type="text" id="editInstagram" placeholder="@yourhandle">
+        </div>
+
+        <div class="profile-field">
+          <label>WhatsApp Number</label>
+          <input type="tel" id="editWhatsapp" placeholder="10 digit number" pattern="[0-9]{10}" maxlength="10">
+        </div>
+
+        <div class="profile-field">
+          <label>Google Maps Link</label>
+          <input type="text" id="editGoogleMaps" placeholder="https://maps.google.com/...">
+        </div>
+
+        <button class="save-btn" onclick="saveProfile()">Save Changes</button>
+        <div id="profileStatus" class="status"></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<script>
+  var firebaseConfig = {
+    apiKey: "AIzaSyCIoNB3MEfz_wdazFvnx1LaDICbeto05Sk",
+    authDomain: "stampway-c32c0.firebaseapp.com",
+    projectId: "stampway-c32c0",
+    storageBucket: "stampway-c32c0.firebasestorage.app",
+    messagingSenderId: "999186622571",
+    appId: "1:999186622571:web:9d4c57287f7196ca20a92e",
+    measurementId: "G-2P0R6QZ6T9"
+  };
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.firestore();
+
+  var currentOwner = null;
+  var currentStoreId = null;
+  var currentOTP = null;
+  var otpExpiryTime = null;
+  var otpTimerInterval = null;
+
+  function generateOTP() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  }
+
+  function sendOTP() {
+    var phone = document.getElementById('phoneInput').value.trim();
+    if (!phone || phone.length !== 10 || isNaN(phone)) {
+      showError('phoneErr', 'Invalid phone number');
+      return;
+    }
+
+    var btn = document.getElementById('sendOtpBtn');
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+
+    db.collection('businesses').where('phone', '==', phone).where('isActive', '==', true)
+      .get().then(function(snapshot) {
+        btn.disabled = false;
+        btn.textContent = 'Send OTP';
+
+        if (snapshot.empty) {
+          showError('phoneErr', 'Store not found or not approved');
+          return;
+        }
+
+        // Generate OTP
+        currentOTP = generateOTP();
+        otpExpiryTime = Date.now() + (5 * 60 * 1000); // 5 minutes
+
+        // Store OTP in database temporarily
+        db.collection('otpVerification').doc(phone).set({
+          otp: currentOTP,
+          expiresAt: new Date(otpExpiryTime),
+          createdAt: new Date()
+        });
+
+        // Show OTP screen
+        document.getElementById('phoneScreen').style.display = 'none';
+        document.getElementById('otpScreen').style.display = 'block';
+        document.getElementById('displayPhone').textContent = phone.slice(0, 3) + '****' + phone.slice(-2);
+        document.getElementById('otpInput').value = '';
+
+        // Start timer
+        startOTPTimer();
+
+        // DEMO: Show OTP in console (for testing)
+        console.log('OTP for ' + phone + ': ' + currentOTP);
+
+      }).catch(function(err) {
+        btn.disabled = false;
+        btn.textContent = 'Send OTP';
+        showError('phoneErr', 'Error: ' + err.message);
+      });
+  }
+
+  function startOTPTimer() {
+    var timeLeft = 300; // 5 minutes
+
+    if (otpTimerInterval) clearInterval(otpTimerInterval);
+
+    otpTimerInterval = setInterval(function() {
+      timeLeft--;
+      var mins = Math.floor(timeLeft / 60);
+      var secs = timeLeft % 60;
+      document.getElementById('otpTimer').textContent = mins + ':' + (secs < 10 ? '0' : '') + secs;
+
+      if (timeLeft <= 0) {
+        clearInterval(otpTimerInterval);
+        document.getElementById('otpTimer').textContent = 'Expired';
+        document.getElementById('verifyBtn').disabled = true;
+      }
+    }, 1000);
+  }
+
+  function verifyOTP() {
+    var otp = document.getElementById('otpInput').value.trim();
+    var phone = document.getElementById('phoneInput').value.trim();
+
+    if (!otp || otp.length !== 6 || isNaN(otp)) {
+      showError('otpErr', 'Invalid OTP format');
+      return;
+    }
+
+    if (Date.now() > otpExpiryTime) {
+      showError('otpErr', 'OTP expired. Request new OTP');
+      return;
+    }
+
+    if (otp !== currentOTP) {
+      showError('otpErr', 'Incorrect OTP');
+      return;
+    }
+
+    // OTP verified - show password screen
+    clearInterval(otpTimerInterval);
+    
+    db.collection('businesses').where('phone', '==', phone).where('isActive', '==', true)
+      .get().then(function(snapshot) {
+        if (!snapshot.empty) {
+          currentStoreId = snapshot.docs[0].id;
+          
+          // Show password screen
+          document.getElementById('otpScreen').style.display = 'none';
+          document.getElementById('passwordScreen').style.display = 'block';
+          document.getElementById('passwordInput').value = '';
+          document.getElementById('passwordErr').style.display = 'none';
+        }
+      });
+  }
+
+  function verifyPassword() {
+    var password = document.getElementById('passwordInput').value.trim();
+    
+    if (!password) {
+      showError('passwordErr', 'Enter password');
+      return;
+    }
+
+    if (!currentStoreId) return;
+
+    db.collection('businesses').doc(currentStoreId).get().then(function(doc) {
+      if (!doc.exists) {
+        showError('passwordErr', 'Store not found');
+        return;
+      }
+
+      var storedPassword = doc.data().password;
+
+      if (password !== storedPassword) {
+        showError('passwordErr', 'Incorrect password');
+        return;
+      }
+
+      // Password verified - Login successful
+      var phone = document.getElementById('phoneInput').value.trim();
+      localStorage.setItem('ownerPhone', phone);
+      localStorage.setItem('storeId', currentStoreId);
+
+      // Delete OTP from database
+      db.collection('otpVerification').doc(phone).delete();
+      
+      loadDashboard(currentStoreId, doc.data());
+    });
+  }
+
+  function backToPhone() {
+    clearInterval(otpTimerInterval);
+    document.getElementById('otpScreen').style.display = 'none';
+    document.getElementById('passwordScreen').style.display = 'none';
+    document.getElementById('phoneScreen').style.display = 'block';
+    document.getElementById('phoneInput').value = '';
+    document.getElementById('otpInput').value = '';
+    document.getElementById('passwordInput').value = '';
+    document.getElementById('phoneErr').style.display = 'none';
+    document.getElementById('otpErr').style.display = 'none';
+    document.getElementById('passwordErr').style.display = 'none';
+  }
+
+  function showError(elementId, msg) {
+    var err = document.getElementById(elementId);
+    err.textContent = msg;
+    err.style.display = 'block';
+    setTimeout(function() { err.style.display = 'none'; }, 3000);
+  }
+
+  function loadDashboard(storeId, storeData) {
+    document.getElementById('loginBox').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+
+    document.getElementById('storeName').textContent = storeData.name || 'Store';
+    document.getElementById('storeCategory').textContent = storeData.category || '';
+    
+    document.getElementById('editStoreName').value = storeData.name || '';
+    document.getElementById('editLocation').value = storeData.address || '';
+    document.getElementById('editInstagram').value = storeData.instagram || '';
+    document.getElementById('editWhatsapp').value = storeData.staffPhone || '';
+    document.getElementById('editGoogleMaps').value = storeData.googleMaps || '';
+
+    loadStats(storeId);
+  }
+
+  function loadStats(storeId) {
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var todayTime = today.getTime();
+
+    db.collection('customerStamps').where('businessId', '==', storeId)
+      .onSnapshot(function(snapshot) {
+        var stampsToday = 0;
+        var customersToday = new Set();
+        var stampsMonth = 0;
+        var customersMonth = new Set();
+        var rewardsCount = 0;
+
+        snapshot.forEach(function(doc) {
+          var data = doc.data();
+          var stamps = data.currentStamps || 0;
+          stampsMonth += stamps;
+          customersMonth.add(data.customerPhone);
+
+          if (data.lastStampAt) {
+            var stampDate = data.lastStampAt.toDate();
+            stampDate.setHours(0, 0, 0, 0);
+            if (stampDate.getTime() === todayTime) {
+              stampsToday += stamps;
+              customersToday.add(data.customerPhone);
+            }
+          }
+        });
+
+        document.getElementById('stampsToday').textContent = stampsToday;
+        document.getElementById('customersToday').textContent = customersToday.size;
+        document.getElementById('stampsMonth').textContent = stampsMonth;
+        document.getElementById('customersMonth').textContent = customersMonth.size;
+      });
+  }
+
+  function generateQR() {
+    var qrContainer = document.getElementById('qrCode');
+    qrContainer.innerHTML = '';
+
+    if (!currentStoreId) {
+      showStatus('qrStatus', 'Error', 'error');
+      return;
+    }
+
+    var qrData = currentStoreId;
+    new QRCode(document.getElementById('qrCode'), {
+      text: qrData,
+      width: 180,
+      height: 180,
+      colorDark: '#2f5d4f',
+      colorLight: '#ffffff'
+    });
+
+    showStatus('qrStatus', '✓ QR Code Generated', 'success');
+  }
+
+  function downloadQR() {
+    var canvas = document.querySelector('#qrCode canvas');
+    if (!canvas) {
+      showStatus('qrStatus', 'Generate QR first', 'error');
+      return;
+    }
+
+    var link = document.createElement('a');
+    link.href = canvas.toDataURL('image/png');
+    link.download = 'stampway-qr-' + currentStoreId + '.png';
+    link.click();
+
+    showStatus('qrStatus', '✓ QR Downloaded', 'success');
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach(function(t) {
+      t.classList.remove('active');
+    });
+    event.target.classList.add('active');
+
+    document.getElementById('statsTab').style.display = tab === 'stats' ? 'block' : 'none';
+    document.getElementById('profileTab').style.display = tab === 'profile' ? 'block' : 'none';
+  }
+
+  function saveProfile() {
+    if (!currentStoreId) return;
+
+    db.collection('businesses').doc(currentStoreId).update({
+      name: document.getElementById('editStoreName').value.trim(),
+      address: document.getElementById('editLocation').value.trim(),
+      instagram: document.getElementById('editInstagram').value.trim(),
+      staffPhone: document.getElementById('editWhatsapp').value.trim(),
+      googleMaps: document.getElementById('editGoogleMaps').value.trim()
+    }).then(function() {
+      showStatus('profileStatus', '✓ Profile Updated', 'success');
+    }).catch(function(err) {
+      showStatus('profileStatus', 'Error: ' + err.message, 'error');
+    });
+  }
+
+  function logout() {
+    localStorage.removeItem('ownerPhone');
+    localStorage.removeItem('storeId');
+    currentStoreId = null;
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginBox').style.display = 'block';
+    document.getElementById('phoneInput').value = '';
+  }
+
+
+
+  function showStatus(elementId, msg, type) {
+    var elem = document.getElementById(elementId);
+    elem.className = 'status ' + type;
+    elem.textContent = msg;
+    setTimeout(function() { elem.style.display = 'none'; }, 2500);
+  }
+
+  // Auto-login if stored
+  var savedPhone = localStorage.getItem('ownerPhone');
+  var savedStoreId = localStorage.getItem('storeId');
+  if (savedPhone && savedStoreId) {
+    db.collection('businesses').doc(savedStoreId).get().then(function(doc) {
+      if (doc.exists && doc.data().isActive) {
+        currentStoreId = savedStoreId;
+        loadDashboard(savedStoreId, doc.data());
+      }
+    });
+  }
+</script>
+</body>
+</html>

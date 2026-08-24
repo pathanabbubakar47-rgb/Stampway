@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>StampWay — Store Registration</title>
+<style>
+  :root{
+    --ink:#1a1d29;
+    --paper:#faf7f2;
+    --clay:#c65d3b;
+    --clay-dark:#a84a2c;
+    --line:#e4ddd1;
+    --muted:#7a7468;
+    --stamp:#2f5d4f;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:-apple-system,'Segoe UI',Roboto,Arial,sans-serif;
+    background:var(--paper);
+    color:var(--ink);
+    min-height:100vh;
+  }
+  .wrap{max-width:480px;margin:0 auto;padding:28px 20px 60px;}
+  .brand{
+    display:flex;align-items:center;gap:10px;margin-bottom:6px;
+  }
+  .stampmark{
+    width:38px;height:38px;border-radius:50%;
+    border:2.5px dashed var(--stamp);
+    display:flex;align-items:center;justify-content:center;
+    color:var(--stamp);font-weight:800;font-size:13px;
+    transform:rotate(-8deg);
+    flex-shrink:0;
+  }
+  h1{font-size:22px;margin:0;letter-spacing:-0.3px;}
+  .sub{color:var(--muted);font-size:14px;margin:4px 0 28px;line-height:1.5;}
+  form{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px 18px;
+  }
+  label{
+    display:block;font-size:12.5px;font-weight:600;
+    color:var(--muted);text-transform:uppercase;letter-spacing:.4px;
+    margin:16px 0 6px;
+  }
+  label:first-of-type{margin-top:0;}
+  input, select{
+    width:100%;padding:12px 13px;font-size:15.5px;
+    border:1.5px solid var(--line);border-radius:9px;
+    background:var(--paper);color:var(--ink);
+    font-family:inherit;
+  }
+  input:focus, select:focus{outline:none;border-color:var(--clay);}
+  .hint{font-size:12px;color:var(--muted);margin-top:5px;}
+  button{
+    width:100%;margin-top:26px;padding:15px;
+    background:var(--clay);color:#fff;border:none;border-radius:10px;
+    font-size:16px;font-weight:700;letter-spacing:.2px;
+    cursor:pointer;
+  }
+  button:active{background:var(--clay-dark);}
+  button:disabled{background:#c9c2b3;}
+  #status{
+    margin-top:18px;padding:14px;border-radius:10px;
+    font-size:14px;line-height:1.5;display:none;
+  }
+  .ok{background:#e8f2ec;color:var(--stamp);display:block !important;}
+  .err{background:#fbe9e5;color:var(--clay-dark);display:block !important;}
+  .foot{margin-top:20px;font-size:12.5px;color:var(--muted);text-align:center;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="brand">
+    <div class="stampmark">SW</div>
+    <h1>StampWay</h1>
+  </div>
+  <p class="sub">Register your store and start building customer loyalty with digital stamp cards.</p>
+
+  <form id="regForm">
+    <fieldset style="border:none;padding:0;margin:0;">
+      <legend style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;">Business Information</legend>
+      
+      <label>Business Name</label>
+      <input type="text" id="storeName" required placeholder="Enter your store name">
+
+      <label>Category</label>
+      <select id="category" required>
+        <option value="">Select category</option>
+        <option>Cafe</option>
+        <option>Restaurant</option>
+        <option>Salon</option>
+        <option>Gym</option>
+        <option>Retail Shop</option>
+        <option>Other</option>
+      </select>
+
+      <label>Location</label>
+      <input type="text" id="address" required placeholder="Area or locality">
+
+      <label>Business Phone</label>
+      <input type="tel" id="phone" required placeholder="10 digit number" pattern="[0-9]{10}" maxlength="10">
+    </fieldset>
+
+    <fieldset style="border:none;padding:0;margin:20px 0 0;border-top:1px dashed var(--line);padding-top:20px;">
+      <legend style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;">Owner Details</legend>
+      
+      <label>Owner Name</label>
+      <input type="text" id="ownerName" required placeholder="Full name">
+
+      <label>Owner Phone</label>
+      <input type="tel" id="ownerPhone" required placeholder="10 digit number" pattern="[0-9]{10}" maxlength="10">
+    </fieldset>
+
+    <fieldset style="border:none;padding:0;margin:20px 0 0;border-top:1px dashed var(--line);padding-top:20px;">
+      <legend style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;">Staff Information</legend>
+      
+      <label>Number of Staff Members</label>
+      <input type="number" id="staffCount" required value="1" min="1" max="20">
+      <p class="hint">Total employees handling transactions</p>
+
+      <label>Staff Contact Number</label>
+      <input type="tel" id="staffPhone" required placeholder="10 digit number" pattern="[0-9]{10}" maxlength="10">
+    </fieldset>
+
+    <fieldset style="border:none;padding:0;margin:20px 0 0;border-top:1px dashed var(--line);padding-top:20px;">
+      <legend style="font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px;">Security</legend>
+      
+      <label>Set Password</label>
+      <input type="password" id="password" required placeholder="Min 6 characters">
+      <p class="hint">Use a strong password with numbers and letters</p>
+
+      <label>Confirm Password</label>
+      <input type="password" id="confirmPassword" required placeholder="Confirm password">
+    </fieldset>
+      
+      <label>Stamps for One Reward</label>
+      <input type="number" id="stampsRequired" value="10" min="1" max="50">
+      <p class="hint">You can update this later in your dashboard</p>
+
+      <label>Reward Description</label>
+      <input type="text" id="reward" placeholder="Describe the reward offered">
+    </fieldset>
+
+    <button type="submit" id="submitBtn">Register Store</button>
+    <div id="status"></div>
+  </form>
+
+  <p class="foot">After registration, our team will review and approve your store. Once approved, you can configure all settings in your dashboard.</p>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" onerror="document.getElementById('debug').textContent='ERROR: Firebase app script load nahi hua (internet/network issue)'; document.getElementById('debug').style.background='#fbe9e5';"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" onerror="document.getElementById('debug').textContent='ERROR: Firestore script load nahi hua (internet/network issue)'; document.getElementById('debug').style.background='#fbe9e5';"></script>
+<script>
+  window.onerror = function(msg, url, line) {
+    document.getElementById('debug').textContent = 'JS ERROR: ' + msg + ' (line ' + line + ')';
+    document.getElementById('debug').style.background = '#fbe9e5';
+  };
+
+  if (typeof firebase === 'undefined') {
+    console.error('Firebase SDK not loaded');
+  } else {
+    // Firebase loaded successfully
+  }
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyCIoNB3MEfz_wdazFvnx1LaDICbeto05Sk",
+    authDomain: "stampway-c32c0.firebaseapp.com",
+    projectId: "stampway-c32c0",
+    storageBucket: "stampway-c32c0.firebasestorage.app",
+    messagingSenderId: "999186622571",
+    appId: "1:999186622571:web:9d4c57287f7196ca20a92e",
+    measurementId: "G-2P0R6QZ6T9"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  var db = firebase.firestore();
+
+  var form = document.getElementById("regForm");
+  var statusBox = document.getElementById("status");
+  var submitBtn = document.getElementById("submitBtn");
+
+  form.addEventListener("submit", function(e) {
+    e.preventDefault();
+    
+    var password = document.getElementById("password").value.trim();
+    var confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+    // Validate passwords
+    if (!password || password.length < 6) {
+      statusBox.className = "error";
+      statusBox.textContent = "Password must be at least 6 characters";
+      statusBox.style.display = 'block';
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      statusBox.className = "error";
+      statusBox.textContent = "Passwords do not match";
+      statusBox.style.display = 'block';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Submitting...";
+
+    db.collection("businesses").add({
+      name: document.getElementById("storeName").value.trim(),
+      category: document.getElementById("category").value,
+      address: document.getElementById("address").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      ownerName: document.getElementById("ownerName").value.trim(),
+      ownerPhone: document.getElementById("ownerPhone").value.trim(),
+      staffCount: Number(document.getElementById("staffCount").value),
+      staffPhone: document.getElementById("staffPhone").value.trim(),
+      stampsRequired: document.getElementById("stampsRequired").value ? Number(document.getElementById("stampsRequired").value) : 10,
+      rewardDescription: document.getElementById("reward").value.trim() || "Configure later",
+      password: password,
+      status: "pending",
+      isActive: false,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function() {
+      statusBox.className = "ok";
+      statusBox.textContent = "✓ Your registration has been submitted successfully. Our team will review and contact you soon.";
+      statusBox.style.display = 'block';
+      form.reset();
+      submitBtn.textContent = "Register Store";
+      submitBtn.disabled = false;
+    }).catch(function(err) {
+      statusBox.className = "error";
+      statusBox.textContent = "Error: " + err.message;
+      statusBox.style.display = 'block';
+      submitBtn.textContent = "Register Store";
+      submitBtn.disabled = false;
+    });
+  });
+</script>
+</body>
+</html>
